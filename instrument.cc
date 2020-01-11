@@ -1,3 +1,7 @@
+//===================================================================================================================
+//
+//  instrument.cc -- Bochs instrumentation for CenuryOS
+//
 /////////////////////////////////////////////////////////////////////////
 // $Id: instrument.cc 12655 2015-02-19 20:23:08Z sshwarts $
 /////////////////////////////////////////////////////////////////////////
@@ -18,6 +22,16 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+//  -----------------------------------------------------------------------------------------------------------------
+//
+//     Date      Tracker  Version  Pgmr  Description
+//  -----------  -------  -------  ----  ---------------------------------------------------------------------------
+//  2020-Jan-11  Initial  v0.0.1   ADCL  Initial version -- copied from bochs-2.6.11/instrument/example1
+//
+//===================================================================================================================
+
+
 
 #include <assert.h>
 
@@ -48,7 +62,7 @@ void bxInstrumentation::bx_instr_reset(unsigned type)
 {
   ready = is_branch = 0;
   num_data_accesses = 0;
-  active = 1;
+  active = 0;
 }
 
 void bxInstrumentation::bx_print_instruction(void)
@@ -88,6 +102,19 @@ void bxInstrumentation::bx_print_instruction(void)
 
 void bxInstrumentation::bx_instr_before_execution(bxInstruction_c *i)
 {
+  //
+  // -- check if we have `xchg edx,edx` and if so we will toggle the active flag
+  //    ------------------------------------------------------------------------
+  if (i->get_opcode_bytes()[0] == 0x87 && i->get_opcode_bytes()[1] == 0xd2) {
+    if (active) {
+      active = 0;
+      fprintf(stderr, "Turning instrumentation off\n");
+    } else {
+      active = 1;
+      fprintf(stderr, "Turning instrumentation on\n");
+    }
+  }
+
   if (!active) return;
 
   if (ready) bx_print_instruction();

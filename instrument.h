@@ -1,3 +1,7 @@
+//===================================================================================================================
+//
+//  instrument.h -- Bochs instrumentation for CenuryOS
+//
 /////////////////////////////////////////////////////////////////////////
 // $Id: instrument.h 12663 2015-02-21 18:37:06Z sshwarts $
 /////////////////////////////////////////////////////////////////////////
@@ -18,6 +22,15 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+//  -----------------------------------------------------------------------------------------------------------------
+//
+//     Date      Tracker  Version  Pgmr  Description
+//  -----------  -------  -------  ----  ---------------------------------------------------------------------------
+//  2020-Jan-11  Initial  v0.0.1   ADCL  Initial version -- copied from bochs-2.6.11/instrument/example1
+//
+//===================================================================================================================
+
 
 #if BX_INSTRUMENTATION
 

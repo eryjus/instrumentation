@@ -12,6 +12,8 @@ You may need more or less depending on your own environment.  Maybe one day I wi
 
 ## Build
 
+This instrumentation was built on Bochs version 2.6.11.
+
 This module is intended to be installed and built as part of Bochs.  When you install this project on your own system, you need to have a copy of Bochs source already installed.  Then this project is intended to be copied into the folder: `bochs-<ver>/instrument/`.
 
 Then I use the following configure command for Bochs:
