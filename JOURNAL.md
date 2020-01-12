@@ -38,3 +38,18 @@ I expect that this contains the code actual machine code for the CPU to emulate.
 
 I was able to get the code working properly.  To do this, I had to go back one more level of abstraction into the Bochs instruction structure.  I am now able to enable/disable by toggle the instrumentation dynamically.
 
+I will commit this version.
+
+---
+
+## Version 0.0.2
+
+In this version, I will change the output to be to an `instrument.log` file.  This is because there is far more information being output that will fit on a screen's rollback buffer and I do not want to have multiple windows open while I redirect output to a file and `tail -f` it from another window (and respond to the debugging prompts in the first!).
+
+I was able to reformat the output so that I am using the Bochs logging API.  In this manner, the `.bochsrc` can control where this information is written.
+
+So, with the option `log: -` the instrumentation output is sent to `stderr` whereas the option `log: file-name` the instrumentation output is sent to `file-name`.
+
+This, then, leaves the flexibility to the user.  Committing this code.
+
+

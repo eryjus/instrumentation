@@ -43,6 +43,9 @@ bxInstrumentation *icpu = NULL;
 
 static disassembler bx_disassembler;
 
+static logfunctions *instrument_log = new logfunctions ();
+#define LOG_THIS instrument_log->
+
 void bx_instr_init_env(void) {}
 void bx_instr_exit_env(void) {}
 
@@ -55,7 +58,7 @@ void bx_instr_initialize(unsigned cpu)
 
   icpu[cpu].set_cpu_id(cpu);
 
-  fprintf(stderr, "Initialize cpu %u\n", cpu);
+  BX_INFO(("Initialize cpu %u", cpu));
 }
 
 void bxInstrumentation::bx_instr_reset(unsigned type)
@@ -68,35 +71,40 @@ void bxInstrumentation::bx_instr_reset(unsigned type)
 void bxInstrumentation::bx_print_instruction(void)
 {
   char disasm_tbuf[512];	// buffer for instruction disassembly
+  char opcode_hex[100] = {0};   // buffer for the instruction hex
+  char buf[5];            // buffer for sprintf
   bx_disassembler.disasm(is32, is64, 0, 0, opcode, disasm_tbuf);
 
   if(opcode_length != 0)
   {
     unsigned n;
 
-    fprintf(stderr, "----------------------------------------------------------\n");
-    fprintf(stderr, "CPU %d: %s\n", cpu_id, disasm_tbuf);
-    fprintf(stderr, "LEN %d\tBYTES: ", opcode_length);
-    for(n=0;n < opcode_length;n++) fprintf(stderr, "%02x", opcode[n]);
+    BX_INFO(("----------------------------------------------------------"));
+    BX_INFO(("CPU %d: %s", cpu_id, disasm_tbuf));
+
+    for(n=0;n < opcode_length;n++) {
+      sprintf(buf, "%02x", opcode[n]);
+      strcat(opcode_hex, buf);
+    }
+
+    BX_INFO(("LEN %d\tBYTES: %s", opcode_length, opcode_hex));
     if(is_branch)
     {
-      fprintf(stderr, "\tBRANCH ");
-
       if(is_taken)
-        fprintf(stderr, "TARGET " FMT_ADDRX " (TAKEN)", target_linear);
+        BX_INFO(("\tBRANCH TARGET " FMT_ADDRX " (TAKEN)", target_linear));
       else
-        fprintf(stderr, "(NOT TAKEN)");
+        BX_INFO(("\tBRANCH (NOT TAKEN)"));
     }
-    fprintf(stderr, "\n");
+
     for(n=0;n < num_data_accesses;n++)
     {
-      fprintf(stderr, "MEM ACCESS[%u]: 0x" FMT_ADDRX " (linear) 0x" FMT_PHY_ADDRX " (physical) %s SIZE: %d\n", n,
+      BX_INFO(("MEM ACCESS[%u]: 0x" FMT_ADDRX " (linear) 0x" FMT_PHY_ADDRX " (physical) %s SIZE: %d", n,
                     data_access[n].laddr,
                     data_access[n].paddr,
                     data_access[n].rw == BX_READ ? "RD":"WR",
-                    data_access[n].size);
+                    data_access[n].size));
     }
-    fprintf(stderr, "\n");
+    BX_INFO((""));
   }
 }
 
@@ -106,12 +114,11 @@ void bxInstrumentation::bx_instr_before_execution(bxInstruction_c *i)
   // -- check if we have `xchg edx,edx` and if so we will toggle the active flag
   //    ------------------------------------------------------------------------
   if (i->get_opcode_bytes()[0] == 0x87 && i->get_opcode_bytes()[1] == 0xd2) {
-    if (active) {
-      active = 0;
-      fprintf(stderr, "Turning instrumentation off\n");
+    toggle_active();
+    if (is_active()) {
+      BX_INFO(("Instrumentation is now ON"));
     } else {
-      active = 1;
-      fprintf(stderr, "Turning instrumentation on\n");
+      BX_INFO(("Instrumentation is now off"));
     }
   }
 
@@ -178,7 +185,7 @@ void bxInstrumentation::bx_instr_interrupt(unsigned vector)
 {
   if(active)
   {
-    fprintf(stderr, "CPU %u: interrupt %02xh\n", cpu_id, vector);
+    BX_INFO(("CPU %u: interrupt %02xh", cpu_id, vector));
   }
 }
 
@@ -186,7 +193,7 @@ void bxInstrumentation::bx_instr_exception(unsigned vector, unsigned error_code)
 {
   if(active)
   {
-    fprintf(stderr, "CPU %u: exception %02xh error_code=%x\n", cpu_id, vector, error_code);
+    BX_INFO(("CPU %u: exception %02xh error_code=%x", cpu_id, vector, error_code));
   }
 }
 
@@ -194,7 +201,7 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
 {
   if(active)
   {
-    fprintf(stderr, "CPU %u: hardware interrupt %02xh\n", cpu_id, vector);
+    BX_INFO(("CPU %u: hardware interrupt %02xh", cpu_id, vector));
   }
 }
 
