@@ -52,4 +52,18 @@ So, with the option `log: -` the instrumentation output is sent to `stderr` wher
 
 This, then, leaves the flexibility to the user.  Committing this code.
 
+---
+
+### 2020-Jan-25
+
+I think I have found a need to dump the CPU state when there is an exception to handle.  The question is that I may want to do this no matter what.  Not sure at this piont.
+
+## Version 0.0.3
+
+In this version, I will make an attempt to add a dump of the CPU state when handling an exeption.  I should be able to get to BX_CPU_C and get the CPU (I hope anyway), and then call `BX_CPU_C::debug()` to output the state. 
+
+---
+
+
+
 

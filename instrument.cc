@@ -194,6 +194,14 @@ void bxInstrumentation::bx_instr_exception(unsigned vector, unsigned error_code)
   if(active)
   {
     BX_INFO(("CPU %u: exception %02xh error_code=%x", cpu_id, vector, error_code));
+    BX_CPU_C *cpu;
+#if BX_SUPPORT_SMP
+    cpu = bx_cpu_array[cpu_id];
+#else
+    cpu = &bx_cpu;
+#endif
+
+    cpu->debug(0);
   }
 }
 
