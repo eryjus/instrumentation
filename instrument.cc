@@ -32,7 +32,7 @@
 //===================================================================================================================
 
 
-
+#include <stdint.h>
 #include <assert.h>
 
 #include "bochs.h"
@@ -56,7 +56,7 @@ void bx_instr_initialize(unsigned cpu)
   if (icpu == NULL)
       icpu = new bxInstrumentation[BX_SMP_PROCESSORS];
 
-  icpu[cpu].set_cpu_id(cpu);
+  icpu[cpu].set_cpu_id(cpu); 
 
   BX_INFO(("Initialize cpu %u", cpu));
 }
@@ -80,7 +80,8 @@ void bxInstrumentation::bx_print_instruction(void)
     unsigned n;
 
     BX_INFO(("----------------------------------------------------------"));
-    BX_INFO(("CPU %d: %s", cpu_id, disasm_tbuf));
+    BX_INFO(("CPU %d at %p: %s   (reg results):", 
+                          cpu_id, eipSave, disasm_tbuf));
 
     for(n=0;n < opcode_length;n++) {
       sprintf(buf, "%02x", opcode[n]);
@@ -88,6 +89,46 @@ void bxInstrumentation::bx_print_instruction(void)
     }
 
     BX_INFO(("LEN %d\tBYTES: %s", opcode_length, opcode_hex));
+
+    BX_INFO(("  EAX: 0x%08.8x; EBX: 0x%08.8x; ECX 0x%08.8x; EDX: 0x%08.8x", 
+              BX_CPU(cpu_id)->gen_reg[0].dword.erx,
+              BX_CPU(cpu_id)->gen_reg[3].dword.erx,
+              BX_CPU(cpu_id)->gen_reg[1].dword.erx,
+              BX_CPU(cpu_id)->gen_reg[2].dword.erx));
+    BX_INFO(("  ESP: 0x%08.8x; EBP: 0x%08.8x; ESI 0x%08.8x; EDI: 0x%08.8x", 
+              BX_CPU(cpu_id)->gen_reg[4].dword.erx,
+              BX_CPU(cpu_id)->gen_reg[5].dword.erx,
+              BX_CPU(cpu_id)->gen_reg[6].dword.erx,
+              BX_CPU(cpu_id)->gen_reg[7].dword.erx));
+    BX_INFO(("  CS: 0x%04.4x; DS: 0x%04.4x; ES: 0x%04.4x; FS: 0x%04.4x; GS: 0x%04.4x; SS: 0x%04.4x; ", 
+              BX_CPU(cpu_id)->sregs[BX_SEG_REG_CS].selector.value,
+              BX_CPU(cpu_id)->sregs[BX_SEG_REG_DS].selector.value,
+              BX_CPU(cpu_id)->sregs[BX_SEG_REG_ES].selector.value,
+              BX_CPU(cpu_id)->sregs[BX_SEG_REG_FS].selector.value,
+              BX_CPU(cpu_id)->sregs[BX_SEG_REG_GS].selector.value,
+              BX_CPU(cpu_id)->sregs[BX_SEG_REG_SS].selector.value));
+    uint32_t flags = BX_CPU(cpu_id)->eflags;
+    BX_INFO(("  EFLAGS: %08.8p (%s %s %s %s %s %s %s IOPL=%d %s %s %s %s %s %s %s %s %s)", flags, 
+              (flags&(1<<21)?"ID":"id"),
+              (flags&(1<<20)?"VIP":"vip"),
+              (flags&(1<<19)?"VIF":"vif"),
+              (flags&(1<<18)?"AC":"ac"),
+              (flags&(1<<17)?"VM":"vm"),
+              (flags&(1<<16)?"RF":"rf"),
+              (flags&(1<<14)?"NT":"nt"),
+              (flags>>12) & 3,
+              (flags&(1<<11)?"OF":"of"),
+              (flags&(1<<10)?"DF":"df"),
+              (flags&(1<< 9)?"IF":"if"),
+              (flags&(1<< 8)?"TF":"tf"),
+              (flags&(1<< 7)?"SF":"sf"),
+              (flags&(1<< 6)?"ZF":"zf"),
+              (flags&(1<< 4)?"AF":"af"),
+              (flags&(1<< 2)?"PF":"pf"),
+              (flags&(1<< 0)?"CF":"cf")
+              ));
+
+
     if(is_branch)
     {
       if(is_taken)
@@ -104,12 +145,13 @@ void bxInstrumentation::bx_print_instruction(void)
                     data_access[n].rw == BX_READ ? "RD":"WR",
                     data_access[n].size));
     }
-    BX_INFO((""));
   }
 }
 
 void bxInstrumentation::bx_instr_before_execution(bxInstruction_c *i)
 {
+  eipSave = BX_CPU(cpu_id)->gen_reg[BX_32BIT_REG_EIP].dword.erx;
+
   //
   // -- check if we have `xchg edx,edx` and if so we will toggle the active flag
   //    ------------------------------------------------------------------------
@@ -194,6 +236,14 @@ void bxInstrumentation::bx_instr_exception(unsigned vector, unsigned error_code)
   if(active)
   {
     BX_INFO(("CPU %u: exception %02xh error_code=%x", cpu_id, vector, error_code));
+    BX_CPU_C *cpu;
+#if BX_SUPPORT_SMP
+    cpu = bx_cpu_array[cpu_id];
+#else
+    cpu = &bx_cpu;
+#endif
+
+    cpu->debug(0);
   }
 }
 

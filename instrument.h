@@ -56,6 +56,7 @@ public:
   bx_bool active;
 
   unsigned cpu_id;
+  Bit32u eipSave;
 
   /* decoding */
   unsigned opcode_length;
