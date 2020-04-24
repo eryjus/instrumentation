@@ -64,6 +64,14 @@ In this version, I will make an attempt to add a dump of the CPU state when hand
 
 ---
 
+### 2020-Mar-22
 
+Today I added the `eip` to the instruction disasm dump and the resulting registers to the instruction print.  This will allow me to better track the goings on with relation to the current bug I am trying to find the root cause for in Century.
+
+---
+
+### 2020-Apr-23
+
+Today I find the need to see the segment registers.   I am going to look at adding that into the register dump.
 
 
